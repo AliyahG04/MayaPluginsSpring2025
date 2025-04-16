@@ -18,7 +18,7 @@ class LimbRigger: # represents the actual functionality of the limric tool
         self.root = mc.ls(sl=True, type="joint")[0] # the root joint is the one we select, that way we're populating this array
         self.mid = mc.listRelatives(self.root, c=True, type="joint")[0] # we're getting the mid joint from finding the children of the new joint 
         self.end = mc.listRelatives(self.mid, c=True, type="joint")[0] # we're getting the end joint from finding the middle joint 
-
+        
     def CreateFKControlForJnt(self, jntName): # this is where we create controllers
         ctrlName = "ac_fk_" + jntName # creates controller for the "ac_fk"
         ctrlGrpName = ctrlName + "_grp" # creates controller for the "_grp"
@@ -54,7 +54,7 @@ class LimbRigger: # represents the actual functionality of the limric tool
     def PrintMVector(self, vectorToPrint):
         print(f"<{vectorToPrint.x}, {vectorToPrint.y}, {vectorToPrint.z}>")
 
-    def RigLimb(self, controllerColor: QColor): # the is where we acutally start rigging the limb with the three joints we collected already
+    def RigLimb(self, r, g, b): # the is where we acutally start rigging the limb with the three joints we collected already
         rootFKCtrl, rootFKCtrlGrp = self.CreateFKControlForJnt(self.root) # this calls from the CreateFKControlForJnt to manually contraint the root
         midFKCtrl, midFKCtrlGrp = self.CreateFKControlForJnt(self.mid) # this calls form the CreateFKControlForJnt to manually contraint the mid
         endFKCtrl, endFKCtrlGrp = self.CreateFKControlForJnt(self.end) # this calls from the CreateFKControlForJnt to manually contraint the end
@@ -107,11 +107,9 @@ class LimbRigger: # represents the actual functionality of the limric tool
 
         topGrpName = self.root + "_rig_grp"
         mc.group({rootFKCtrlGrp,ikEndCtrlGrp, ikPoleVectorCtrlGrp, ikfkBlendCtrlGrp}, n= topGrpName)
-        mc.setAttr(f"{topGrpName}.overrideEnabled", 1)
-        mc.setAttr(f"{topGrpName}.overrideRGBColors", 1)
-        mc.setAttr(f"{topGrpName}.overrideColorR", controllerColor.redF())
-        mc.setAttr(f"{topGrpName}.overrideColorG", controllerColor.greenF())
-        mc.setAttr(f"{topGrpName}.overrideColorB", controllerColor.blueF())
+        mc.setAttr(topGrpName+".overrideEnabled", 1)
+        mc.setAttr(topGrpName+".overrideRGBColors", 1)
+        mc.setAttr(topGrpName+".overrideColorRGB", r, g, b, type="double3")
 
 class ColorPicker(QWidget):
     def __init__(self):
@@ -127,7 +125,6 @@ class ColorPicker(QWidget):
     def ColorPickerBtnClicked(self):
         self.color = QColorDialog.getColor()
         self.colorPickerBtn.setStyleSheet(f"background-color:{self.color.name()}")
-
 
 class LimbRigToolWidget(QMayaWindow): # contains all the functioning data for the window and display the widget
     def __init__(self): # constructor for the super()
@@ -165,16 +162,27 @@ class LimbRigToolWidget(QMayaWindow): # contains all the functioning data for th
         self.colorPicker = ColorPicker()
         self.masterLayout.addWidget(self.colorPicker)
 
+        self.setColorBtn = QPushButton("Set Color")
+        self.masterLayout.addWidget(self.setColorBtn)
+        self.setColorBtn.clicked.connect(self.SetColorBtnClicked)
+
         self.rigLimbBtn = QPushButton("Rig Limb") # this is the label for the button
         self.masterLayout.addWidget(self.rigLimbBtn) # creates the widget as the "Rig Limb" button in the window
         self.rigLimbBtn.clicked.connect(self.RigLimbBtnClicked) # it immedialty shows the text from RigLimbBtnClicked when we click the "Rig Limb" button clicled
+
+        
+    def SetColorBtnClicked(self):
+        selection = mc.ls(sl=True)[0]
+        mc.setAttr(selection+".overrideEnabled", 1)
+        mc.setAttr(selection+".overrideRGBColors", 1)
+        mc.setAttr(selection+".overrideColorRGB", self.colorPicker.color.redF(), self.colorPicker.color.greenF(),self.colorPicker.color.blueF(), type="double3")
 
     def CtrlSizeValueChanged(self, newValue): # contains the function to help change the value of the controller and tell the size the user wants
         self.rigger.controllerSize = newValue # this function is created so we can actually change the value of the slider
         self.ctrlSizeLabel.setText(f"{self.rigger.controllerSize}") # this is updating the ctrlSizeLabel, that way so we can see the number actaully change when we move the slider
     
     def RigLimbBtnClicked(self): # contains the function to activate the rig limb button
-        self.rigger.RigLimb(self.colorPicker.color) # telling the button to rig the limb
+        self.rigger.RigLimb(self.colorPicker.color.redF(), self.colorPicker.color.greenF(), self.colorPicker.color.blueF()) # telling the button to rig the limb
         
     def AutoFindBtnClicked(self): # contains the function to activate the auto find botton
         try: # contains the function that displays the results in our edit line
