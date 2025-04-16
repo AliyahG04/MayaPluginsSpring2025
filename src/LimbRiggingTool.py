@@ -169,7 +169,6 @@ class LimbRigToolWidget(QMayaWindow): # contains all the functioning data for th
         self.rigLimbBtn = QPushButton("Rig Limb") # this is the label for the button
         self.masterLayout.addWidget(self.rigLimbBtn) # creates the widget as the "Rig Limb" button in the window
         self.rigLimbBtn.clicked.connect(self.RigLimbBtnClicked) # it immedialty shows the text from RigLimbBtnClicked when we click the "Rig Limb" button clicled
-
         
     def SetColorBtnClicked(self):
         selection = mc.ls(sl=True)[0]
