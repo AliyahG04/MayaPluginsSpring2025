@@ -26,6 +26,10 @@ class MayaToUE:
         self.meshes = []
         self.animationClips: list[AnimClip] = []
 
+    def AddNewAnimEnty(self):
+        self.animationClips.append(AnimClip())
+        return self.animationClips[-1]
+
     def SetSelectedAsRootJnt(self):
         selection = mc.ls(sl=True)
         if not selection:
@@ -158,6 +162,17 @@ class MayaToUEWidget(QMayaWindow):
         addMeshBtn = QPushButton("Add Meshes")
         addMeshBtn.clicked.connect(self.AddMeshBtnClicked)
         self.masterLayout.addWidget(addMeshBtn)
+
+        addNewAnimClipEntryBtn = QPushButton("Add Animation Clip")
+        addNewAnimClipEntryBtn.clicked.connect(self.AddNewAnimClipEntryBtnClicked)
+        self.masterLayout.addWidget(addNewAnimClipEntryBtn)
+
+        self.animEntryLayout = QVBoxLayout()
+        self.masterLayout.addLayout(self.animEntryLayout)
+
+    def AddNewAnimClipEntryBtnClicked(self):
+        newEntry = self.mayaToUE.AddNewAnimEnty()
+        self.animEntryLayout.addWidget(AnimClipEntryWidget(newEntry))
 
     @TryAction
     def AddMeshBtnClicked(self):
