@@ -67,7 +67,7 @@ class MayaToUE:
         
         self.meshes = list(meshes)
 
-class AnimClipEntryWidget(QMayaWindow):
+class AnimClipEntryWidget(QWidget):
     def __init__(self, animClip: AnimClip):
         super().__init__()
         self.animClip = animClip
@@ -93,6 +93,31 @@ class AnimClipEntryWidget(QMayaWindow):
         minFrameLineEdit.setText(str(int(self.animClip.frameMin)))
         minFrameLineEdit.textChanged.connect(self.MinFrameChanged)
         self.masterLayout.addWidget(minFrameLineEdit)
+
+        self.masterLayout.addWidget(QLabel("Max: "))
+        maxFrameLineEdit = QLineEdit()
+        maxFrameLineEdit.setValidator(QIntValidator())
+        maxFrameLineEdit.setText(str(int(self.animClip.frameMax)))
+        maxFrameLineEdit.textChanged.connect(self.MaxFrameChanged)
+        self.masterLayout.addWidget(maxFrameLineEdit)
+
+        setRangeBtn = QPushButton("[-]")
+        setRangeBtn.clicked.connect(self.SetRangeBtnClicked)
+        self.masterLayout.addWidget(setRangeBtn)
+
+        deleteBtn = QPushButton("X")
+        deleteBtn.clicked.connect(self.DeleteButtonClicked)
+        self.masterLayout.addWidget(deleteBtn)
+
+    def DeleteButtonClicked(self):
+        self.deleteLater()
+
+    def SetRangeBtnClicked(self):
+        mc.playbackOptions(e=True, min=self.animClip.frameMin, max=self.animClip.frameMax)
+        mc.playbackOptions(e=True, ast=self.animClip.frameMin, aet=self.animClip.frameMax)
+
+    def MaxFrameChanged(self, newVal):
+        self.animClip.frameMax = int(newVal)
 
     def MinFrameChanged(self, newVal):
         self.animClip.frameMin = int(newVal)
@@ -153,6 +178,6 @@ class MayaToUEWidget(QMayaWindow):
         self.rootJntText.setText(self.mayaToUE.rootJnt)
         
 
-# MayaToUEWidget().show()
+MayaToUEWidget().show()
 
-AnimClipEntryWidget(AnimClip()).show()
+# AnimClipEntryWidget(AnimClip()).show()
