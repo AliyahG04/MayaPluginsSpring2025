@@ -17,7 +17,7 @@ Rigs any 3 joint limb.
 
 ## Maya To UE Tool
 
-<img src="assets/MayaToUeToolCapture.PNG">
+<img src="assets/MayaToUeToolCapture.png">
 
 Adds an entire root joint, puts meshes into a list, and saves animations   
 
