@@ -1,6 +1,8 @@
+import os
 from MayaUtils import IsJoint, IsMesh, QMayaWindow
+from PySide2.QtCore import Signal
 from PySide2.QtGui import QIntValidator, QRegExpValidator
-from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QCheckBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPushButton, QVBoxLayout, QWidget
 import maya.cmds as mc
 
 def TryAction(action):
@@ -25,6 +27,66 @@ class MayaToUE:
         self.rootJnt = ""
         self.meshes = []
         self.animationClips: list[AnimClip] = []
+        self.fileName = ""
+        self.saveDir = ""
+
+    def GetAllJoints(self):
+        jnts = []
+        jnts.append(self.rootJnt)
+        children = mc.listRelatives(self.rootJnt, c=True, ad=True, type="joint")
+        if children:
+            jnts.extend(children)
+
+        return jnts
+
+    def SaveFiles(self):
+        allJnts = self.GetAllJoints()
+        allMeshes = self.meshes
+
+        allObjectToExport = allJnts + allMeshes
+        mc.select(allObjectToExport, r=True)
+
+        skeletalMeshExportPath = self.GetSleletalMeshSavePath()
+
+        mc.FBXResetExport()
+        mc.FBXExportSmoothingGroups('-v', True)
+        mc.FBXExportInputConnections('-v', False)
+
+        # -f means the file name, -s means export selected, -ea means export animation.
+        mc.FBXExport('-f', skeletalMeshExportPath, '-s', True, '-ea', False)
+
+        os.makedirs(self.GetAnimDirPath(), exist_ok=True)
+        mc.FBXExportBakeComplexAnimation('-v', True)
+        for animClip in self.animationClips:
+            if not animClip.shouldExport:
+                continue
+
+            animExportPath = self.GetSavePathForAnimClip(animClip)
+
+            startFrame = animClip.frameMin
+            endFrame = animClip.frameMax
+
+            mc.FBXExportBakeComplexStart('-v', startFrame)
+            mc.FBXExportBakeComplexEnd('-v', endFrame)
+            mc.FBXExportBakeComplexStep('-v', 1)
+
+            mc.playbackOptions(e=True, min = startFrame, max = endFrame)
+            mc.FBXExport('-f', animExportPath, '-s', True, '-ea', True)
+
+    def GetAnimDirPath(self):
+        path = os.path.join(self.saveDir, "animations")
+        return os.path.normpath(path)
+
+    def GetSavePathForAnimClip(self, animClip: AnimClip):
+        path = os.path.join(self.GetAnimDirPath(), self.fileName + animClip.subfix + ".fbx")
+        return os.path.normpath(path)
+
+    def GetSleletalMeshSavePath(self):
+        path = os.path.join(self.saveDir, self.fileName + ".fbx")
+        return os.path.normpath(path)
+
+    def RemoveAnimClip(self, clipToRemove: AnimClip):
+        self.animationClips.remove(clipToRemove)
 
     def AddNewAnimEnty(self):
         self.animationClips.append(AnimClip())
@@ -72,6 +134,8 @@ class MayaToUE:
         self.meshes = list(meshes)
 
 class AnimClipEntryWidget(QWidget):
+    entryRemoved = Signal(AnimClip)
+    entrySubfixChanged = Signal(str)
     def __init__(self, animClip: AnimClip):
         super().__init__()
         self.animClip = animClip
@@ -114,6 +178,7 @@ class AnimClipEntryWidget(QWidget):
         self.masterLayout.addWidget(deleteBtn)
 
     def DeleteButtonClicked(self):
+        self.entryRemoved.emit(self.animClip)
         self.deleteLater()
 
     def SetRangeBtnClicked(self):
@@ -128,6 +193,7 @@ class AnimClipEntryWidget(QWidget):
 
     def SubfixTextChanged(self, newText):
         self.animClip.subfix = newText
+        self.entrySubfixChanged.emit(newText)
 
     def shouldExportCheckBoxToggled(self):
         self.animClip.shouldExport = not self.animClip.shouldExport
@@ -170,9 +236,72 @@ class MayaToUEWidget(QMayaWindow):
         self.animEntryLayout = QVBoxLayout()
         self.masterLayout.addLayout(self.animEntryLayout)
 
+        self.saveFileLayout = QHBoxLayout()
+        self.masterLayout.addLayout(self.saveFileLayout)
+        fileNameLabel = QLabel("File Name: ")
+        self.saveFileLayout.addWidget(fileNameLabel)
+
+        self.fileNameLineEdit = QLineEdit()
+        self.fileNameLineEdit.setFixedWidth(80)
+        self.fileNameLineEdit.setValidator(QRegExpValidator("\w+"))
+        self.fileNameLineEdit.textChanged.connect(self.FileNameLineEditChanged)
+        self.saveFileLayout.addWidget(self.fileNameLineEdit)
+
+        self.directoryLabel = QLabel("Save Directory: ")
+        self.saveFileLayout.addWidget(self.directoryLabel)
+        self.saveDirectoryLineEdit = QLineEdit()
+        self.saveDirectoryLineEdit.setEnabled(False)
+        self.saveFileLayout.addWidget(self.saveDirectoryLineEdit)
+        self.pickDirBtn = QPushButton("...")
+        self.pickDirBtn.clicked.connect(self.PickDirBtnClicked)
+        self.saveFileLayout.addWidget(self.pickDirBtn)
+
+        self.savePreviewLabel = QLabel("")
+        self.masterLayout.addWidget(self.savePreviewLabel)
+
+        saveFileBtn = QPushButton("Save Files")
+        saveFileBtn.clicked.connect(self.SaveFilesBtnClicked)
+        self.masterLayout.addWidget(saveFileBtn)
+
+    def SaveFilesBtnClicked(self):
+        self.mayaToUE.SaveFiles()
+
+    def UpdateSavePreviewLabel(self):
+        previewText = self.mayaToUE.GetSleletalMeshSavePath()
+        if not self.mayaToUE.animationClips:
+            self.savePreviewLabel.setText(previewText)
+            return
+        
+        for animClip in self.mayaToUE.animationClips:
+            animSavePath = self.mayaToUE.GetSavePathForAnimClip(animClip)
+            previewText += "\n" + animSavePath
+
+        self.savePreviewLabel.setText(previewText)
+
+    @TryAction
+    def PickDirBtnClicked(self):
+        path = QFileDialog().getExistingDirectory()
+        self.saveDirectoryLineEdit.setText(path)
+        self.mayaToUE.saveDir = path
+        self.UpdateSavePreviewLabel()
+
+    @TryAction
+    def FileNameLineEditChanged(self, newText):
+        self.mayaToUE.fileName = newText
+        self.UpdateSavePreviewLabel()
+
     def AddNewAnimClipEntryBtnClicked(self):
         newEntry = self.mayaToUE.AddNewAnimEnty()
-        self.animEntryLayout.addWidget(AnimClipEntryWidget(newEntry))
+        newEntryWidget = AnimClipEntryWidget(newEntry)
+        newEntryWidget.entryRemoved.connect(self.AnimClipEntryRemoved)
+        newEntryWidget.entrySubfixChanged.connect(lambda x : self.UpdateSavePreviewLabel())
+        self.animEntryLayout.addWidget(newEntryWidget)
+        self.UpdateSavePreviewLabel()
+
+    @TryAction
+    def AnimClipEntryRemoved(self, animClip: AnimClip):
+        self.mayaToUE.RemoveAnimClip(animClip)
+        self.UpdateSavePreviewLabel()
 
     @TryAction
     def AddMeshBtnClicked(self):
