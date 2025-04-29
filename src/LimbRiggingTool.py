@@ -189,8 +189,8 @@ class LimbRigToolWidget(QMayaWindow): # contains all the functioning data for th
             self.jointSelectionText.setText(f"{self.rigger.root},{self.rigger.mid},{self.rigger.end}") # displays the results in our text in our line edit 
         except Exception as e: # contains the error function
             QMessageBox.critical(self, "Error", "Wrong Selection, please select the first joint of a limb!") # this text will display whenever we click a joint (or nothing at all) that isn't the first one of the limb
-
-limbRigToolWidget = LimbRigToolWidget() # connects to the LimbRigToolWidget to better dispay its functions
-limbRigToolWidget.show() # shows the the limb rig tool window on maya 
+def Run():
+    limbRigToolWidget = LimbRigToolWidget() # connects to the LimbRigToolWidget to better dispay its functions
+    limbRigToolWidget.show() # shows the the limb rig tool window on maya 
 
 
