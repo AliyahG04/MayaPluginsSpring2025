@@ -19,5 +19,4 @@ class SpaceSwitchTool(QtWidgets.Qwidget):
     
 
 spaceSwitchTool = SpaceSwitchTool()
-window.setObjectName("Space_Switch_Window")
 spaceSwitchTool.show()

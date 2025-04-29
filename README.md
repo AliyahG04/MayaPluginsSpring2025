@@ -2,6 +2,9 @@
 
 his is a collection of maya plugins to help with rigging and other stuff
 
+# How to Install:
+drag the install.mel file into maya's viewport, and the tools will apear on the current shelf.
+
 ## Limb Rigger
 
 <img src="assets/limbRiggingToolCapture.PNG">
