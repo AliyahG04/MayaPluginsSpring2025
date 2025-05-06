@@ -28,3 +28,4 @@ def Install():
     AddShelfBtn("LimbRiggingTool")
     AddShelfBtn("MayaToUE")
     AddShelfBtn("ProxyRigger")
+    AddShelfBtn("AutoSpaceSwitch")
