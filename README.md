@@ -5,6 +5,19 @@ his is a collection of maya plugins to help with rigging and other stuff
 # How to Install:
 drag the install.mel file into maya's viewport, and the tools will apear on the current shelf.
 
+## Auto Space Switch (for parenting objects)
+
+<img src="assets/autoSpaceSwitchTool.PNG">
+<img src="assets/autoSpaceSwitchAssets.PNG">
+
+Parents the object to however many joints you wish along with switching between those joints.
+
+* Select any object you want to parent to the joints and its name will pop up.
+* Turn on the character's rig visibility and select the wrist joints and/or any other joint you want to parent the object to.
+* You can parent the object to however many joints you want on the rig just by clicking "Select Switch Targets" button (make sure you are not still Alt+clicking the object while clicking the joints, the "Object to Switch" section will hold and remeber the object).
+* Whenever you want to switch the object to the other joint, there is a group name that appears after you parent the joints to the object called "YourObject _dual_parent_grp". when you click that group you should see a section called "Space", that contains all the joints you've parented to your object, you just click on that section and switch to any joints you wish.
+
+
 ## Limb Rigger
 
 <img src="assets/limbRiggingToolCapture.PNG">
