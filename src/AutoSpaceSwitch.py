@@ -1,10 +1,9 @@
 from MayaUtils import *
 from PySide2 import QtWidgets
-<<<<<<< HEAD
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QVBoxLayout
 import maya.cmds as mc
 
-def TryAction(action):
+def TryAction(action): #This will show the error window
     def wrapper(*args, **kwargs):
         try:
             action(*args, **kwargs)
@@ -14,11 +13,6 @@ def TryAction(action):
     return wrapper
 
 
-=======
-from PySide2.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QRadioButton, QVBoxLayout
-import maya.cmds as mc
-
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
 class SpaceSwitchToolWidget(QMayaWindow, QtWidgets.QWidget):
     def GetWindowHash(self):
         return "9a23f7060d61124f1d31ebe505c033ee"
@@ -30,77 +24,28 @@ class SpaceSwitchToolWidget(QMayaWindow, QtWidgets.QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Layout
         self.masterLayout = QVBoxLayout(self)
-<<<<<<< HEAD
         self.setLayout(self.masterLayout)
 
         # Object Selection
         self.masterLayout.addWidget(QLabel("Object to Switch:"))
         self.objectField = QLineEdit()
-        # self.masterLayout.addWidget(QLabel("Object to Switch:"))
-        # minFrameLineEdit = QLineEdit()
+
         self.selectObjectBtn = QPushButton("Select")
         self.selectObjectBtn.clicked.connect(self.SelectObject)
         self.masterLayout.addWidget(self.selectObjectBtn)
         
         objectLayout = QtWidgets.QHBoxLayout()
         
-=======
-
-        # Object Selection
-        self.objectLabel = QLabel("Object to Switch:")
-        self.objectField = QLineEdit()
-        self.selectObjectBtn = QPushButton("Select")
-        self.selectObjectBtn.clicked.connect(self.SelectObject)
-        
-        objectLayout = QtWidgets.QHBoxLayout()
-        objectLayout.addWidget(self.objectLabel)
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
         objectLayout.addWidget(self.objectField)
         objectLayout.addWidget(self.selectObjectBtn)
 
         self.masterLayout.addLayout(objectLayout)
 
-<<<<<<< HEAD
-        # # Parent Options
-        # self.parentLabel = QLabel("Parent to:")
-        # self.leftHandRadio = QRadioButton("Left Hand")
-        # self.rightHandRadio = QRadioButton("Right Hand")
-        # self.bothHandsRadio = QRadioButton("Both Hands")
-
-        # parentLayout = QHBoxLayout()
-        # parentLayout.addWidget(self.parentLabel)
-        # parentLayout.addWidget(self.leftHandRadio)
-        # parentLayout.addWidget(self.rightHandRadio)
-        # parentLayout.addWidget(self.bothHandsRadio)
-
-        # self.masterLayout.addLayout(parentLayout)
-=======
-        # Parent Options
-        self.parentLabel = QLabel("Parent to:")
-        self.leftHandRadio = QRadioButton("Left Hand")
-        self.rightHandRadio = QRadioButton("Right Hand")
-        self.bothHandsRadio = QRadioButton("Both Hands")
-
-        parentLayout = QHBoxLayout()
-        parentLayout.addWidget(self.parentLabel)
-        parentLayout.addWidget(self.leftHandRadio)
-        parentLayout.addWidget(self.rightHandRadio)
-        parentLayout.addWidget(self.bothHandsRadio)
-
-        self.masterLayout.addLayout(parentLayout)
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
-
         self.selectParentTargetsBtn = QPushButton("Select Switch Targets")
         self.selectParentTargetsBtn.clicked.connect(self.SelectParentTargetsBtnClicked)
         self.masterLayout.addWidget(self.selectParentTargetsBtn)
 
-<<<<<<< HEAD
-        # # Switch Button
-        # switchBtn = QtWidgets.QPushButton("Switch Space")
-        # switchBtn.clicked.connect(self.SwitchSpace)
-        # self.masterLayout.addWidget(switchBtn)
     @TryAction
     def SelectParentTargetsBtnClicked(self):
         obj = self.objectField.text()
@@ -114,18 +59,6 @@ class SpaceSwitchToolWidget(QMayaWindow, QtWidgets.QWidget):
         selectedJnt = selection[0]
         if not IsJoint(selectedJnt):
             raise Exception(f"{selectedJnt} is not a joint, Please select any joint of the Rig!")
-=======
-        # Switch Button
-        switchBtn = QtWidgets.QPushButton("Switch Space")
-        switchBtn.clicked.connect(self.SwitchSpace)
-        self.masterLayout.addWidget(switchBtn)
-
-    def SelectParentTargetsBtnClicked(self):
-        selection = mc.ls(sl=True)
-        obj = self.objectField.text()
-        grpName = f"{obj}_dual_parent_grp"
-        mc.group(obj, name=grpName)
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
         
         parentConstraint = ""
         # print(selection)
@@ -142,86 +75,15 @@ class SpaceSwitchToolWidget(QMayaWindow, QtWidgets.QWidget):
             fullAttrName = parentConstraint + "." + attrName
             exp = f"{fullAttrName} = {grpName}.{ctrlAttrName} == {i} ? 1:0;"
             print(exp)
-<<<<<<< HEAD
             mc.expression(s=exp)
 
     @TryAction
-=======
-            mc.expression(exp)
-
-
-
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
     def SelectObject(self):
         selectedObjects = mc.ls(selection=True)
         if selectedObjects:
             self.objectField.setText(selectedObjects[0])
         else:
-<<<<<<< HEAD
             raise Exception("No object selected.")
-
-    # def SwitchSpace(self):
-    #    obj = self.objectField.text()
-
-    #    if not obj:
-    #        mc.warning("Please select an object.")
-    #        return
-
-    #    if self.leftHandRadio.isChecked():
-    #        parent = "FKWrist_L" # Replace with actual joint name
-    #    elif self.rightHandRadio.isChecked():
-    #        parent = "FKWrist_R" # Replace with actual joint name
-    #    elif self.bothHandsRadio.isChecked():
-    #         parentLeft = "FKWrist_L" # Replace with actual joint name
-    #         parentRight = "FKWrist_R" # Replace with actual joint name
-
-    #         # Create a group to parent under both hands
-    #         grpName = mc.group(empty=True, name=f"{obj}_dual_parent_grp")
-            
-    #         #Parent constraints with maintain offset
-    #         mc.parentConstraint(parentLeft, grpName, maintainOffset=True)
-    #         mc.parentConstraint(parentRight, grpName, maintainOffset=True)
-
-    #         mc.parent(obj, grpName)
-    #         return
-    #    else:
-    #        mc.warning("Please select a parent option.")
-    #        return
-       
-    #    mc.parent(obj, parent)
-=======
-            mc.warning("No object selected.")
-
-    def SwitchSpace(self):
-       obj = self.objectField.text()
-
-       if not obj:
-           mc.warning("Please select an object.")
-           return
-
-       if self.leftHandRadio.isChecked():
-           parent = "FKWrist_L" # Replace with actual joint name
-       elif self.rightHandRadio.isChecked():
-           parent = "FKWrist_R" # Replace with actual joint name
-       elif self.bothHandsRadio.isChecked():
-            parentLeft = "FKWrist_L" # Replace with actual joint name
-            parentRight = "FKWrist_R" # Replace with actual joint name
-
-            # Create a group to parent under both hands
-            grpName = mc.group(empty=True, name=f"{obj}_dual_parent_grp")
-            
-            #Parent constraints with maintain offset
-            mc.parentConstraint(parentLeft, grpName, maintainOffset=True)
-            mc.parentConstraint(parentRight, grpName, maintainOffset=True)
-
-            mc.parent(obj, grpName)
-            return
-       else:
-           mc.warning("Please select a parent option.")
-           return
-       
-       mc.parent(obj, parent)
->>>>>>> b13bf1d228ddd3d450a3011e7ba0355ff9577b7b
 
 spaceSwitchToolWidget = SpaceSwitchToolWidget()
 spaceSwitchToolWidget.show()
